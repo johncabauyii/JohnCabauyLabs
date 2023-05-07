@@ -8,10 +8,9 @@
 
 import utime
 from machine import Pin, PWM
-import _thread
 MAX = 65535
 
-baton = _thread.allocate_lock()
+
 
 class Light:
     """
