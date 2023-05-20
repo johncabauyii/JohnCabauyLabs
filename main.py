@@ -43,7 +43,7 @@ if __name__ == "__main__":
     while True:
         sleep(0.2)
         
-        print("cross button: " + c.requestState())
+
 
         if c.requestState() and pedestrianW:
             print("request to cross")
@@ -53,7 +53,6 @@ if __name__ == "__main__":
             pass
         
         if h.carHall() and carW:
-            print("car sensor: " + h.carHall())
             carGo()
             sleep(5)
         else:
@@ -64,10 +63,7 @@ if __name__ == "__main__":
 
 
 
-        
-
-""" this works pretty good. Make it a little cleaner.
-also need a way to make sure walk stays on if there are no cars waiting"""
+  
     
             
 
