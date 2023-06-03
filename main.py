@@ -1,22 +1,23 @@
 from ModelTemplate import *
-from Displays import *
 from time import sleep
+
 
 sleep(0.1)
 
 
 
-s = StopWatch()
+RL = RoomLight()
 
-s.run()
+RL.run()
+
+
         
 
 
 
 
 
-  
-    
-            
+
+
 
 

@@ -15,9 +15,10 @@ import time
 import random
 from Model import *
 from Button import *
-from Counters import *
-from Displays import *
-from Model import *
+from Sensors import *
+from myclasses import *
+from Lights import *
+
 
 """
 This is the template Model Runner - you should rename this class to something
@@ -32,30 +33,54 @@ This template currently implements a very simple state model that uses a button 
 transition from state 0 to state 1 then a 5 second timer to go back to state 0.
 """
 
-class StopWatch:
-    
+class RoomLight:
+
     def __init__(self):
-        self.startbutton = Button(14, "startButton", buttonhandler=self)
-        self.stopbutton = Button(2, "stopButton", buttonhandler=self)
-        self.display = OLEDDisplay(sda=4, scl=5, i2cid=0, width=128, height=64)
-        self.t1 = TimeKeeper()
-        self.t2 = TimeKeeper()
-        self.lapNumber = 0
         
-        self._model = Model(4, self, debug=True)
+        # Instantiate whatever classes from your own model that you need to control
+        # Handlers can now be set to None - we will add them to the model and it will
+        # do the handling
         
+        self._button1 = Button(14, "lightSwitch", buttonhandler=None)
+        self._button2 = Button(2, "partySwitch", buttonhandler=None)
+        self._ldr = LDRSensor(0, True, 500)
+        self._partylight = PartyLight(5, 300)
+        self._roomlight = Light(13)
+        self._lightswitch = ServoLight(4)
         
+        # Instantiate a Model. Needs to have the number of states, self as the handler
+        # You can also say debug=True to see some of the transitions on the screen
+        # Here is a sample for a model with 4 states
+        self._model = Model(3, self, debug=True)
+        
+        # Up to 4 buttons and a timer can be added to the model for use in transitions
+        # Buttons must be added in the sequence you want them used. The first button
+        # added will respond to BTN1_PRESS and BTN1_RELEASE, for example
+        self._model.addButton(self._button1)
+        self._model.addButton(self._button2)
+        # add other buttons (up to 3 more) if needed
+        
+        # Add any timer you have.
+        
+        # Now add all the transitions that are supported by my Model
+        # obvously you only have BTN1_PRESS through BTN4_PRESS
+        # BTN1_RELEASE through BTN4_RELEASE
+        # and TIMEOUT
+        
+        # some examples:
+        #darkState:
         self._model.addTransition(0, BTN1_PRESS, 1)
-        self._model.addTransition(1, BTN1_PRESS, 3)
-        self._model.addTransition(2, BTN1_PRESS, 1)
-        self._model.addTransition(3, BTN1_PRESS, 3)
-        
+        self._model.addTransition(0, BTN2_PRESS, 2)
+
+        #workState:
+        self._model.addTransition(1, BTN1_PRESS, 0)
         self._model.addTransition(1, BTN2_PRESS, 2)
-        self._model.addTransition(2, BTN2_PRESS, 0)
-        self._model.addTransition(3, BTN2_PRESS, 2)
 
-        
-
+        #partyState:
+        self._model.addTransition(2, BTN1_PRESS, 1)
+        self._model.addTransition(2, BTN2_PRESS, 1)
+        # etc.
+    
     """
     Create a run() method - you can call it anything you want really, but
     this is what you will need to call from main.py or someplace to start
@@ -63,51 +88,35 @@ class StopWatch:
     """
 
     def run(self):
-        # The run method should first start the model
-        self._model.start()
+        # The run method should simply do any initializations (if needed)
+        # and then call the model's run method.
+        # You can send a delay as a parameter if you want something other
+        # than the default 0.1s. e.g.,  self._model.run(0.25)
+        self._model.run()
 
-        # Then it should do a continous loop while the model runs
-        while self._model._running:
-            # Inside, you can use if statements do handle various do/actions
-            # that you need to perform for each state
-            # Do not perform entry and exit actions here - those are separate
+    """
+    stateDo - the method that handles the do/actions for each state
+    """
+    def stateDo(self, state):
             
-            # You can see which state the model is in (yeah i know)
-            curstate = self._model._curState
-            
-            # Now if you want to do different things for each state you can do it:
-            if curstate == 1:
-                self.display.reset()
-                self.display.showText(str(self.t1),0,0)
-                self.display.showText(str(self.t2),0, 20)
-                self.display.showText("Lap: " + str(self.lapNumber) , 0, 40)
-                
-                
-            elif curstate == 3:
-                self.display.reset()
-                self.display.showText(str(self.t1),0,0)
-                self.display.showText(str(self.t2),0, 20)
-                self.display.showText("Lap: " + str(self.lapNumber) , 0, 40)
-                
-                
-                # State1 do/actions
-                # You can check your sensors here and perform transitions manually if needed
-                # For example, if you want to go from state 1 to state 2 when the motion sensor
-                # is tripped you can do something like this
-                # if self.motionsensor.tripped():
-                # gotoState(2)
-                pass
-            
-            #etc.
-
-            # If you are using a software timer, you will need to do a poll to
-            # see if the timer has timed out. Hardware timer does not need polling
-            # Note that Wokwi does not do well with Hardware timers
+        # Now if you want to do different things for each state you can do it:
+        if state == 0:
+            if self._ldr.lightTrip():
+                self._model.gotoState(1)
+            pass
+        elif state == 1:
+            self._partylight.off()
 
             
-            # I suggest putting in a short wait so you are not overloading the poor Pico
-            time.sleep(0.1)
-
+        elif state == 2:
+            # State1 do/actions
+            self._partylight.disco()
+            # You can check your sensors here and perform transitions manually if needed
+            # For example, if you want to go from state 1 to state 2 when the motion sensor
+            # is tripped you can do something like this
+            # if self.motionsensor.tripped():
+            # gotoState(2)
+            pass
 
     """
     stateEntered - is the handler for performing entry/actions
@@ -116,31 +125,25 @@ class StopWatch:
     """
     def stateEntered(self, state):
         # Again if statements to do whatever entry/actions you need
-        if state == 0: #timeZero state
-            self.display.reset()
-            self.t1.reset()
-            self.t2.reset()
-            self.resetLap()
-            self.display.showText(str(self.t1),0,0)
-            self.display.showText(str(self.t2),0,20)
-            self.display.showText("Lap: " + str(self.lapNumber) , 0, 40)
-            print('State 0 entered')
+        if state == 0:
+            # entry actions for state 0
+            print('****DARK_STATE****')
+            self._roomlight.off()
+            self._lightswitch.off()
+            self._partylight.off()
             pass
         
-        elif state == 1: #running state
-            self.display.reset()
-            self.t1.start()
-            self.t2.start()
-            print('State 1 entered')
-        elif state == 2: #pause state
-            self.t1.stop()
-            self.t2.stop()
-            print('State 2 entered')
-        elif state == 3: #lap state
-            self.t2.reset()
-            self.addLap()
-            print('State 3 entered')
-            
+        elif state == 1:
+            # entry actions for state 1
+            print('****WORK_MODE****')
+            self._roomlight.on()
+            self._lightswitch.on()
+        
+        elif state == 2:
+            # entry actions for state 2
+            print('****PARTY_TIME!!!!****')
+            self._roomlight.off()
+            self._lightswitch.off()
     """
     stateLeft - is the handler for performing exit/actions
     You get the state number of the state that just entered
@@ -153,47 +156,10 @@ class StopWatch:
         pass
 
     
-    """
-    If you are using buttons, you create the button handlers here.
-    Associate up to 4 buttons with BTN1_PRESS through BTN4_PRESS
-    """
-    def buttonPressed(self, name):
-        # For example, lets say the start button is BTN1 and stop button is BTN2
-        if name == "startButton":
-            self._model.processEvent(BTN1_PRESS)
-        # if you have multiple buttons, feel free to add them. Up to 4 buttons
-        # are supported by the model right now.
-        elif name == "stopButton":
-            self._model.processEvent(BTN2_PRESS)
-
-    """
-    Same thing with Button release, if you want to handle release events
-    As well as press or just want to do release events only.
-    """
-    def buttonReleased(self, name):
-        pass
-
-
-    """
-    If you are using a timer, handle the timeout callback
-    My model can use timeout events for transitions, so simply
-    send the event to the model and it will take care of
-    the rest.
-    """
-    def timeout(self):
-        self._model.processEvent(TIMEOUT)
-        
-            
-        
-    def addLap(self):
-        self.lapNumber = self.lapNumber+1
-    
-    def resetLap(self):
-        self.lapNumber = 0
-        
 
 # Test your model. Note that this only runs the template class above
 # If you are using a separate main.py or other control script,
 # you will run your model from there.
 if __name__ == '__main__':
-    StopWatch().run()
+        
+    RoomLight().run()

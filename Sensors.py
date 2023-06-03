@@ -78,3 +78,5 @@ class AnalogSensor(Sensor):
 
     def rawValue(self):
         return self._pinio.read_u16()
+
+    
