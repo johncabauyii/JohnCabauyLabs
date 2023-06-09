@@ -12,11 +12,10 @@ those in your run method for transitions based on sensor events.
 
 # Import whatever Library classes you need - Model is obviously needed
 import time
-import random
 from Model import *
 from Button import *
 from Sensors import *
-from myclasses import *
+from WalkSignal import *
 from Lights import *
 
 
@@ -69,18 +68,7 @@ class RoomLight:
         
         # some examples:
         #darkState:
-        self._model.addTransition(0, BTN1_PRESS, 1)
-        self._model.addTransition(0, BTN2_PRESS, 2)
 
-        #workState:
-        self._model.addTransition(1, BTN1_PRESS, 0)
-        self._model.addTransition(1, BTN2_PRESS, 2)
-
-        #partyState:
-        self._model.addTransition(2, BTN1_PRESS, 1)
-        self._model.addTransition(2, BTN2_PRESS, 1)
-        # etc.
-    
     """
     Create a run() method - you can call it anything you want really, but
     this is what you will need to call from main.py or someplace to start

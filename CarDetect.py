@@ -8,7 +8,7 @@ class CarDetect:
 
     def __init__(self):
         #constructor
-        self.detectCar = DigitalSensor(13, lowactive = True)
+        self.detectCar = DigitalSensor(14, lowactive = True)
         
     def carHall(self):
         if self.detectCar.tripped():
