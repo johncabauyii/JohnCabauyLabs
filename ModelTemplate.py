@@ -19,7 +19,8 @@ from Lights import *
 from LightSignal import *
 from WalkSignal import *
 from CarDetect import *
-
+from Counters import *
+from Displays import *
 
 
 
@@ -37,7 +38,7 @@ This template currently implements a very simple state model that uses a button 
 transition from state 0 to state 1 then a 5 second timer to go back to state 0.
 """
 
-class RoomLight:
+class LightController:
 
     def __init__(self):
         
@@ -47,12 +48,16 @@ class RoomLight:
         
         self._button1 = Button(12, "nbCross", buttonhandler=None)
         self._button2 = Button(13, "ebCross", buttonhandler=None)
+        
+        self.display = OLEDDisplay(sda=4, scl=5, i2cid=0, width=128, height=64)
 
         self._lightSignal = LightSignal()
         
         self._ldr = LDRSensor(0, True, 500)
 
         self.w = WalkSignal()
+        
+        self._timer = SoftwareTimer(None)
         
         
         
@@ -68,6 +73,8 @@ class RoomLight:
         
         # Add any timer you have.
         
+        self._model.addTimer(self._timer)
+        
         # Now add all the transitions that are supported by my Model
         # obvously you only have BTN1_PRESS through BTN4_PRESS
         # BTN1_RELEASE through BTN4_RELEASE
@@ -79,6 +86,9 @@ class RoomLight:
 
         #Cross EB street
         self._model.addTransition(1, BTN2_PRESS, 3)
+        
+        self._model.addTransition(0, TIMEOUT, 1)
+        self._model.addTransition(1, TIMEOUT, 1)
 
         #all other button presses ignored as irrelevent
     
@@ -102,19 +112,23 @@ class RoomLight:
             
         # Now if you want to do different things for each state you can do it:
         if state == 0:
+            self._timer.check()
+            self.display.showText(str(self._timer.check()),0,0)
             """if self._ldr.lightTrip():
                 self._model.gotoState(1)
-            else:"""
+            else:
             self._lightSignal.goGreen()
             sleep(5)
             if self.w.warning(5):
-                self._model.gotoState(1)
+                self._model.gotoState(1)"""
             
         elif state == 1:
-            self._lightSignal.goRed()
+            self._timer.check()
+            self.display.showText(str(self._timer.check()),0,0)
+            """self._lightSignal.goRed()
             sleep(5)
             if self.w.warning(10):
-                self._model.gotoState(0)
+                self._model.gotoState(0)"""
 
 
     """
@@ -126,15 +140,21 @@ class RoomLight:
         # Again if statements to do whatever entry/actions you need
         if state == 0:
             print('State 0 entered')
+            self._lightSignal.goGreen()
+            self._timer.start(5)
+            
+            """if self.w.warning(5):
+                self._model.gotoState(1)"""
             
             
         elif state == 1:
             # entry actions for state 1
             print('State 1 entered')
             self._lightSignal.goRed()
-            sleep(5)
-            if self.w.warning(5):
-                self._model.gotoState(0)
+            self._timer.start(5)
+            
+            """if self.w.warning(5):
+                self._model.gotoState(0)"""
             # You can check your sensors here and perform transitions manually if needed
             # For example, if you want to go from state 1 to state 2 when the motion sensor
             # is tripped you can do something like this
@@ -146,13 +166,17 @@ class RoomLight:
             # entry actions for state 1
             print('State 2 entered')
             
+            """if self.w.warning(10):
+                self._model.gotoState(0)"""
+            
                 
         elif state == 3:
             print("entered state 3")
             self._lightSignal.goGreen()
             sleep(5)
-            if self.w.warning(10):
-                self._model.gotoState(1)
+            
+            """if self.w.warning(10):
+                self._model.gotoState(1)"""
     """
     stateLeft - is the handler for performing exit/actions
     You get the state number of the state that just entered

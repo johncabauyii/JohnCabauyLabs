@@ -21,15 +21,21 @@ class WalkSignal:
         #warnTime arguement allows to set seconds of warning
         while True:
             warnTime = warnTime - 1
-            self.walkLight.off()
-            self.dontLight.on()
             self.display.reset()
             self.display.showNumber(warnTime)
             sleep(0.5)
-            self.dontLight.off()
-            sleep(0.5)
             if warnTime == 0:
+                self.display.reset()
+                self.display.showText("WAIT")
+                return True
                 break
+            
+    def stopCount(self, stopTime = 10):
+        for i in range(stopTime):
+            self.display.reset()
+            self.display.showNumber(stopTime)
+            sleep(1)
+            return True
     
     def dont(self):
         #turns on dontLight and displays "WAIT"
