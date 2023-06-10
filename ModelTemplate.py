@@ -88,7 +88,7 @@ class LightController:
         self._model.addTransition(1, BTN2_PRESS, 3)
         
         self._model.addTransition(0, TIMEOUT, 1)
-        self._model.addTransition(1, TIMEOUT, 1)
+        self._model.addTransition(1, TIMEOUT, 0)
 
         #all other button presses ignored as irrelevent
     
@@ -166,6 +166,9 @@ class LightController:
             # entry actions for state 1
             print('State 2 entered')
             
+            self._lightSignal.goRed()
+            self._timer.start(10)
+            
             """if self.w.warning(10):
                 self._model.gotoState(0)"""
             
@@ -173,7 +176,7 @@ class LightController:
         elif state == 3:
             print("entered state 3")
             self._lightSignal.goGreen()
-            sleep(5)
+            self._timer.start(10)
             
             """if self.w.warning(10):
                 self._model.gotoState(1)"""
@@ -195,4 +198,4 @@ class LightController:
 # you will run your model from there.
 if __name__ == '__main__':
         
-    RoomLight().run()
+    ModelTemplate().run()
