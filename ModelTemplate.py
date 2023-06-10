@@ -53,7 +53,7 @@ class LightController:
 
         self._lightSignal = LightSignal()
         
-        self._ldr = LDRSensor(0, True, 500)
+        self._ldr = LDRSensor(0, False, 500)
 
         self.w = WalkSignal()
         
@@ -114,9 +114,9 @@ class LightController:
         if state == 0:
             self._timer.check()
             self.display.showText(str(self._timer.check()),0,0)
-            """if self._ldr.lightTrip():
+            if self._ldr.lightTrip():
                 self._model.gotoState(1)
-            else:
+            """else:
             self._lightSignal.goGreen()
             sleep(5)
             if self.w.warning(5):
